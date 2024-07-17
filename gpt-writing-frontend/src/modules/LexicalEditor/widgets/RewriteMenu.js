@@ -111,7 +111,7 @@ export default function RewriteModal ({ editor }) {
       console.log('set cur selected node key to ', node.__key)
 
       dispatch(setNodeSelected(node.__key))
-      dispatch(setIsCurNodeEditable(true))
+      dispatch(setIsCurNodeEditable(true)) // isCurNodeEditable = true is used to set editor editable
       // console.log('node clicked: ', node.__key)
       // console.log(node)
       node.setStyle('background-color: #ffc300;')

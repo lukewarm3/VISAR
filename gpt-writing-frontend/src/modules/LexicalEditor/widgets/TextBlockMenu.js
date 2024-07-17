@@ -87,7 +87,7 @@ export function TextBlockMenu ({ editor }) {
 
     if ($isHighlightDepNode(children[0])) {
       // dispatch(setCurSelectedNodeKey(children[0].__key))
-      dispatch(setSelectedSent(children[0].getTextContent()))
+      dispatch(setSelectedSent(children[0].getTextContent())) // selectedSent is used in rewriteModal
     }
 
     const buttonElem = buttonRef.current

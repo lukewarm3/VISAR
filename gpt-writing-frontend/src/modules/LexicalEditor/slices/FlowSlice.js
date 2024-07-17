@@ -108,9 +108,9 @@ export const generateFromDepGraph = createAsyncThunk(
     console.log('depGraph: ', res['depGraph'])
 
     return {
-      depGraph: res['depGraph'],
+      depGraph: res['depGraph'],  // react flow node key : prompt, text (editor node text)
       rootFlowKeys: rootKeys,
-      nodeMappings: flowEditorNodeMapping
+      nodeMappings: flowEditorNodeMapping // relation between react flow node key and editor node key
     }
   }
 )
@@ -534,7 +534,7 @@ const flowSlice = createSlice({
           let parentKey = null
           for (const [rid, lkey] of Object.entries(flowEditorNodeMapping)) {
             if (lkey === parent_lnode_key) {
-              parentKey = rid
+              parentKey = rid // the corresponding react flow parent key
             }
           }
 
@@ -629,10 +629,10 @@ const flowSlice = createSlice({
     loadNodes (state, action) {
       // init nodes from the selected discussion points
       const {
-        selectedText,
-        selectedKeywords,
-        discussionPoints,
-        curRangeNodeKey
+        selectedText, // the native selection text
+        selectedKeywords, // selected generated key word
+        discussionPoints, // selected generated discussion points
+        curRangeNodeKey // selected editor text node in the paragraph (set in the FloatingMenu.js)
       } = action.payload
       let new_nodes = [...state.nodes]
       let new_edges = [...state.edges]
@@ -648,7 +648,7 @@ const flowSlice = createSlice({
       let nodeData = JSON.parse(JSON.stringify(state.nodeData))
       let edgeData = JSON.parse(JSON.stringify(state.edgeData))
 
-      let keyPointMappings = {}
+      let keyPointMappings = {} // {keyword: [prompt1, prompt2, ...]}
       selectedKeywords.map((k, index) => {
         keyPointMappings[k] = discussionPoints.filter(r => r['keyword'] === k)
       })
@@ -656,13 +656,23 @@ const flowSlice = createSlice({
       const init_x = 150
       const init_y = 150
 
-      let root_key = null
-      for (const [key, value] of Object.entries(flowEditorNodeMapping)) {
+      let root_key = null // this is the React Flow Node key correspondes to the current selected Editor Text Node
+      for (const [key, value] of Object.entries(flowEditorNodeMapping)) { // should be empty in the beginning, so cannot find the root key for this
         if (value === curRangeNodeKey) {
           root_key = key
         }
       }
 
+      // Reminder: the corresponding icon for different isImplemented and needsUpdate value
+      // {depGraph[nodeId].isImplemented === false ? (
+      //   <HourglassBottomIcon />
+      // ) : depGraph[nodeId].needsUpdate === true ? (
+      //   <LoopIcon />
+      // ) : (
+      //   <CheckCircleOutlineIcon />
+      // )}
+
+      // this means there is no root yet, so create a new root now in the React Flow
       if (root_key === null) {
         root_key = 'user' + '-' + randId
         dependencyGraph[root_key] = {
@@ -701,7 +711,7 @@ const flowSlice = createSlice({
       }
 
       selectedKeywords.map((k, windex) => {
-        const parent_x = 500 * (windex % 2)
+        const parent_x = 500 * (windex % 2) // relative to parent position x
         const parent_y = 400 * Math.floor(windex / 2) + 300
 
         const keyword_key = 'keyword' + '-' + randId + '-' + k
@@ -729,11 +739,12 @@ const flowSlice = createSlice({
 
         dependencyGraph[keyword_key] = {
           type: 'featuredBy',
-          prompt: k,
+          prompt: k, // the prompt is the keyword
           isImplemented: false,
           parent: root_key,
           children: [],
           needsUpdate: false
+          // there is no "text" because isImplemented is false now
         }
 
         dependencyGraph[root_key]['children'].push(keyword_key)

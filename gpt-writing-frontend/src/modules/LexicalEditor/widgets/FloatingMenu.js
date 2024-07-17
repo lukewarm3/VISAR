@@ -50,7 +50,7 @@ import {
   logInteractionData
 } from '../slices/FlowSlice'
 
-export function FloatingMenu ({ editor }) {
+export function FloatingMenu ({ editor }) {  // show the floating menu (elaborate, add to graph), and also add background color to the editor nodes
   const buttonRef = useRef(null)
   const dispatch = useDispatch()
   const username = useSelector(state => state.editor.username)
@@ -60,6 +60,7 @@ export function FloatingMenu ({ editor }) {
   const dependencyGraph = useSelector(state => state.flow.dependencyGraph)
   const curClickedNodeKey = useSelector(state => state.editor.curClickedNodeKey)
 
+  // highlight the text of dependency of the selected node
   const showDependencies = useCallback(() => {
     const selection = $getSelection()
 
@@ -97,7 +98,7 @@ export function FloatingMenu ({ editor }) {
     ) {
       const domRange = nativeSelection.getRangeAt(0)
       let rect
-      if (nativeSelection.anchorNode === rootElement) {
+      if (nativeSelection.anchorNode === rootElement) { // nativeSelection.anchorNode is usually just the text string, so ususally not equal
         let inner = rootElement
         while (inner.firstElementChild != null) {
           inner = inner.firstElementChild
@@ -107,7 +108,7 @@ export function FloatingMenu ({ editor }) {
         rect = domRange.getBoundingClientRect()
       }
 
-      positionFloatingButton(buttonElem, rect)
+      positionFloatingButton(buttonElem, rect)  // buttonElem is the floating button
     } else {
       positionFloatingButton(buttonElem, null)
     }
@@ -115,12 +116,14 @@ export function FloatingMenu ({ editor }) {
     return true
   }, [editor])
 
+  // set multiple registers to dispatch command (eg. KEY_ENTER_COMMAND, ADD_TO_GRAPH_COMMAND, ...)
+  // SELECTION_CHANGE_COMMAND: update the floating button position when this is
   useEffect(() => {
     const buttonElem = buttonRef.current
 
     return mergeRegister(
-      editor.registerUpdateListener(({ editorState }) => {
-        editorState.read(() => {
+      editor.registerUpdateListener(({ editorState }) => { // set a listener, be triggered when the editor's states are changed
+        editorState.read(() => { // read the updated editor's state
           updateFloatingButton()
         })
       }),
@@ -186,6 +189,8 @@ export function FloatingMenu ({ editor }) {
     )
   }, [editor, updateFloatingButton, curClickedNodeKey])
 
+  // this is the function to set the background color of the editor node
+  // if the node is selected, then also add dashed green line to indicate it is selected
   useEffect(() => {
     editor.update(() => {
       for (const [key, value] of Object.entries(nodeMappings)) {

@@ -195,9 +195,11 @@ export default function ElaborateFLoatingGroup({ editor }) {
     })
       .then((response) => response.json())
       .then((response) => {
-        dispatch(setPrompts(response["response"]));
+        dispatch(setPrompts(response["response"])); // prompts is an array of {key: key, prompt: prompt (discussion point)}
         dispatch(setPromptStatus("fetched"));
-        setPage(1);
+        setPage(1);  
+        // each keyword can have multiple prompts
+        // if there are more than 6 prompts, there will be more than 1 page
       });
   };
 
@@ -259,6 +261,7 @@ export default function ElaborateFLoatingGroup({ editor }) {
     }
   }, [editor]);
 
+  // this is used to tell the editor to show the floating button
   useEffect(() => {
     // console.log(`isElaborate changed: ${isElaborate}`)
     editor.getEditorState().read(() => {
@@ -362,9 +365,10 @@ export default function ElaborateFLoatingGroup({ editor }) {
 
   const handleContentSketchingClicked = (e) => {
     dispatch(loadNodes({ selectedText: promptedText, selectedKeywords: selectedKeywords , discussionPoints: selectedPrompts, curRangeNodeKey: curRangeNodeKey}));
+    // curRangeNodeKey is the selected text node in the paragraph
     dispatch(setFlowModalOpen());
-    dispatch(setRangeGenerationMode(true))
-    positionFloatingButton(buttonRef.current, null);
+    dispatch(setRangeGenerationMode(true)) // ? what is the use of rangeGenerationMode
+    positionFloatingButton(buttonRef.current, null); // hide the floating button (the second parameter is null)
     dispatch(setPromptStatus("empty"))
     dispatch(setIsReactFlowInModal())
   };

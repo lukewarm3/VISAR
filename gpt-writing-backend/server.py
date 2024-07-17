@@ -26,7 +26,6 @@ client = MongoClient(mongoDB_key)
 db = client.gptwriting
 
 
-
 @app.route("/signup", methods=["POST"])
 def signup():
     if request.method == "POST":

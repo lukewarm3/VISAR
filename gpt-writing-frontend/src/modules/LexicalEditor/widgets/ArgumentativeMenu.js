@@ -51,7 +51,7 @@ export function ArgumentativeMenu ({ editor }) {
   const buttonRef = useRef(null)
   const dispatch = useDispatch()
   const nodeData = useSelector(state => state.flow.nodeData)
-  const [isMenuOpen, setMenuOpen] = useState(false)
+  const [isMenuOpen, setMenuOpen] = useState(false) // the floating menu
   const curSelectedNodeKey = useSelector(
     state => state.editor.curSelectedNodeKey
   )

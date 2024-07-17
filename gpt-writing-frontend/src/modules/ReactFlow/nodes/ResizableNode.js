@@ -151,7 +151,7 @@ const ResizableNode = ({ data }) => {
             }}
             onClick={e => {
               if (!updateModalOpen) {
-                const key = flowEditorNodeMapping[nodeId]
+                const key = flowEditorNodeMapping[nodeId] // highlight node key
                 dispatch(setNodeSelected(key))
                 console.log(`node ${nodeId} selected`)
               }

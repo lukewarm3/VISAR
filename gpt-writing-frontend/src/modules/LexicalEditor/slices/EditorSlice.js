@@ -113,7 +113,7 @@ const editorSlice = createSlice({
     setIsCurNodeEditable (state, action) {
       return {
         ...state,
-        isCurNodeEditable: action.payload
+        N: action.payload
       }
     },
     setCurRangeNodeKey (state, action) {

@@ -69,6 +69,9 @@ export function $maybeMoveChildrenSelectionToParent (parentNode, offset = 0) {
   if (offset !== 0) {
   }
   const selection = $getSelection()
+  // An element node is a node that can contain other nodes
+  // if the node is element node, the node is the "parent"
+  // this if statement checks if the node is a range or parent. If not range, or it is a leaf, then do not need to update anything 
   if (!$isRangeSelection(selection) || !$isElementNode(parentNode)) {
     return selection
   }
@@ -176,6 +179,7 @@ export function $updateElementSelectionOnCreateDeleteNode (
   $updateSelectionResolveTextNodes(selection)
 }
 
+// set the anchor and focus to the ending position of the last child text node
 function $updateSelectionResolveTextNodes (selection) {
   const anchor = selection.anchor
   const anchorOffset = anchor.offset
@@ -189,6 +193,7 @@ function $updateSelectionResolveTextNodes (selection) {
     }
     const childSize = anchorNode.getChildrenSize()
     const anchorOffsetAtEnd = anchorOffset >= childSize
+    // get the last child 
     const child = anchorOffsetAtEnd
       ? anchorNode.getChildAtIndex(childSize - 1)
       : anchorNode.getChildAtIndex(anchorOffset)
@@ -197,6 +202,7 @@ function $updateSelectionResolveTextNodes (selection) {
       if (anchorOffsetAtEnd) {
         newOffset = child.getTextContentSize()
       }
+      // set both anchor and focus to the end of the child text
       anchor.set(child.__key, newOffset, 'text')
       focus.set(child.__key, newOffset, 'text')
     }
@@ -238,7 +244,7 @@ export function removeNode (
   preserveEmptyParent = true
 ) {
   // errorOnReadOnly();
-  const key = nodeToRemove.__key
+  const key = nodeToRemove.__key // the key of the editor text node
   const parent = nodeToRemove.getParent()
   if (parent === null) {
     return
@@ -314,6 +320,7 @@ export function selectTextNodeByKey (editor, nodeKey) {
   })
 }
 
+// remove the node by modifying the linked list
 export function removeFromParent (node) {
   const oldParent = node.getParent()
   if (oldParent !== null) {
@@ -373,6 +380,8 @@ export function DFS (stateDepGraph, curNodeKey, stateNodeMappings, visited) {
 
   const curNode = depGraph[curNodeKey]
 
+  // curNodeKey should not appear in the nodeMapping because there is no relation yet
+  // usually the root key's isImplemented is True, so it will not enter into this if statement
   if (!(curNodeKey in Object.keys(nodeMappings)) && !curNode['isImplemented']) {
     // Only add lexical node when the corrresponding flow node is not implemented in the editor (which means it is newly added)
 
@@ -388,6 +397,7 @@ export function DFS (stateDepGraph, curNodeKey, stateNodeMappings, visited) {
       }
     }
 
+    // curNode["text"] is the GPT generated text
     const hlNode = $createHighlightDepNode('highlight-dep-elb', curNode['text'])
     // hlNode.setStyle(`background-color: ${randomizeBGColor()}`)
 
@@ -456,7 +466,7 @@ export function DFS (stateDepGraph, curNodeKey, stateNodeMappings, visited) {
     }
     curNode['isImplemented'] = true
     depGraph[curNodeKey] = curNode
-    // Add to nodeMappings
+    // Add to nodeMappings !!!!!!!!
     nodeMappings[curNodeKey] = hlNode.getKey()
   } else if (curNode['needsUpdate']) {
     // Update the text node
