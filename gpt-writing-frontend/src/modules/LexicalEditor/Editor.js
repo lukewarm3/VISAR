@@ -243,7 +243,7 @@ export default function Editor () {
                       // restore the default background transprancy for the last selected node
                       if (curSelectedNodeKey !== child.__key) {
                         // dispatch(setCurSelectedNodeKey(child.__key))
-                        dispatch(setNodeSelected(child.__key))
+                        dispatch(setNodeSelected(child.__key)) // when click the HighlightNode, the HighlightNode will be wrapped by dashed green line
                         const lastSelectedNode =
                           $getNodeByKey(curSelectedNodeKey)
                         if (

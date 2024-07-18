@@ -410,7 +410,7 @@ export function DFS (stateDepGraph, curNodeKey, stateNodeMappings, visited) {
         hlNode.setStyle(`background-color: ${colorMapping['featuredBy']}`)
         textBlockNode.append(hlNode)
         textBlockNode.append($createTextNode('  '))
-        if ($isTextNode(parentNode)) {
+        if ($isTextNode(parentNode)) { // the beginning sentence is text node now (it later changes to text block node)
           parentNode.insertAfter(textBlockNode)
           // textBlockNode.append($createTextNode('123'))
         } else {
