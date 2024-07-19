@@ -203,6 +203,8 @@ export default function Editor () {
                 eventType={'click'}
                 eventListener={(e, editor, key) => {
                   editor.update(() => {
+                    console.log('NodeEventPlugin TextNode triggered for node key:', key);
+
                     const selection = $getSelection()
                     const child = selection.getNodes()[0]
                     console.log('text node clicked', child.__key)
@@ -222,14 +224,16 @@ export default function Editor () {
                   // console.log('flow viewport', flowInstance.getViewport())
 
                   editor.update(() => {
+                    console.log('NodeEventPlugin textblocknode triggered for node key:', key);
 
                     if ($getNodeByKey(key) === null || $getNodeByKey(key) === undefined) {
-                      console.log()
+                      console.log("[editor] the event key is null")
                       return
                     }
 
                     const selection = $getSelection()
                     const child = selection.getNodes()[0]
+                    console.log("[editor] selection's first node (child): ", child)
                     dispatch(setCurClickedNodeKey(child.__key))
                     // console.log("[event listener] curSelectedNodeKey, node key, isCurNodeEditable: ", curSelectedNodeKey, child.__key, isCurNodeEditable)
                     if (
@@ -260,6 +264,7 @@ export default function Editor () {
                       dispatch(setIsCurNodeEditable(false))
                     }
                   })
+                  e.stopPropagation()
                 }}
               />
               <ListMaxIndentLevelPlugin maxDepth={7} />

@@ -94,6 +94,7 @@ export function TextBlockMenu ({ editor }) {
     const nativeSelection = window.getSelection()
     let hasHighlightDepNode = false
 
+    
     if (children[0].__key === curSelectedNodeKey && isCurNodeEditable) {
       console.log(
         'curSelectedNodeKey, nodeKey, isCurEditable: ',
@@ -101,7 +102,7 @@ export function TextBlockMenu ({ editor }) {
         children[0].__key,
         isCurNodeEditable
       )
-      console.log('gonna hide the text block menu')
+      console.log('[textblockmenu] gonna hide the text block menu')
       positionFloatingButton(buttonElem, null)
       return
     }
@@ -117,8 +118,6 @@ export function TextBlockMenu ({ editor }) {
     }
 
     const rootElement = editor.getRootElement()
-    console.log("[text block menu] selection anchor's offset ", selection.anchor.offset)
-    console.log("[text block menu] selection focus's offset ", selection.focus.offset)
 
     if (
       selection != null &&
@@ -177,9 +176,6 @@ export function TextBlockMenu ({ editor }) {
           const node = nodes[0]
           // dispatch(setCurSelectedNodeKey(node.__key))
           console.log('[textblock menu] selection changed')
-          console.log("[textblock menu] the selected node is ", node)
-          console.log("[textblock menu] the selection's anchor is ", selection.anchor.getNode())
-          console.log("[textblock menu] the selection's focus is ", selection.focus.getNode())
           updateTextBlockMenu()
           return false
         },

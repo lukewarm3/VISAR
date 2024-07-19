@@ -42,7 +42,7 @@ export const generateRewrite = createAsyncThunk(
     // const state = getState();
     console.log("[generateRewrite] args:", args)
     // const { basePrompt, mode, furInstruction, curSent } = args;
-    const res = await fetch("https://visar.app/api/rewrite", {
+    const res = await fetch("http://localhost:5000/rewrite", {
       method: "POST",
       mode: "cors",
       headers: {
@@ -113,7 +113,7 @@ const editorSlice = createSlice({
     setIsCurNodeEditable (state, action) {
       return {
         ...state,
-        N: action.payload
+        isCurNodeEditable: action.payload
       }
     },
     setCurRangeNodeKey (state, action) {

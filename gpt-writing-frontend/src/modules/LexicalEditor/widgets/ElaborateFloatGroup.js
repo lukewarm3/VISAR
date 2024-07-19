@@ -151,13 +151,13 @@ export default function ElaborateFLoatingGroup({ editor }) {
     // console.log(nodes)
     setPromptedText(selected_text);
     
-    const fetchPromise = fetch('https://visar.app/api/keyword', {
+    const fetchPromise = fetch('http://localhost:5000/keyword2', {
       method: 'POST',
       mode: 'cors',
       headers: {
-        Accept: 'application/json',
+        "Accept": 'application/json',
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        'Access-Control-Allow-Origin': '*',
       },
       body: JSON.stringify({
         prompt: selected_text,
@@ -169,9 +169,12 @@ export default function ElaborateFLoatingGroup({ editor }) {
         return res.json();
       })
       .then((res) => {
+        console.log("Test, the response is", res["response"])
         let Keywords = res["response"];
         dispatch(setPromptKeywords(Keywords));
         setFetchingKeyword(false);
+      }).catch(error => {
+        console.log("error is ", error)
       });
   };
 
@@ -180,7 +183,7 @@ export default function ElaborateFLoatingGroup({ editor }) {
     setFetchingAlertOpen(true);
 
     // IP: https://visar.app:8088
-    fetch("https://visar.app/api/prompts", {
+    fetch("http://localhost:5000/prompts", {
       method: "POST",
       mode: "cors",
       headers: {
@@ -210,7 +213,7 @@ export default function ElaborateFLoatingGroup({ editor }) {
       console.log(`selection: ${selected_text}`);
 
       const fetchPromise = fetch(
-        "http://https://visar.app/api/?" +
+        "http://http://localhost:5000/api/?" +
           new URLSearchParams({
             prompt: selected_text,
             mode: "elaborate",

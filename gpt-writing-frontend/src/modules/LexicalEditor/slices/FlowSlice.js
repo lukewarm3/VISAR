@@ -6,6 +6,7 @@ import {
   MarkerType,
   getOutgoers
 } from 'reactflow'
+import { removeChildrenNodeFromDepGraph } from '../utils'
 import ResizableNode from '../../ReactFlow/nodes/ResizableNode'
 import { cyan, teal, pink, amber, blue, purple } from '@mui/material/colors'
 import { addGenerationsFromSketch } from '../utils'
@@ -47,7 +48,7 @@ export const logInteractionData = createAsyncThunk(
   'flow/logInteractionData',
   async (args, { getState }) => {
 
-    const res = await fetch('https://visar.app/api/logInteractionData', {
+    const res = await fetch('http://localhost:5000/logInteractionData', {
       method: 'POST',
       mode: 'cors',
       headers: {
@@ -91,7 +92,7 @@ export const generateFromDepGraph = createAsyncThunk(
       }
     }
 
-    const res = await fetch('https://visar.app/api/generateFromDepGraph', {
+    const res = await fetch('http://localhost:5000/generateFromDepGraph', {
       method: 'POST',
       mode: 'cors',
       headers: {
@@ -120,7 +121,7 @@ export const generateFromSketch = createAsyncThunk(
   async (editor, { getState }) => {
     const state = getState()
 
-    const res = await fetch('https://visar.app/api/generateFromSketch', {
+    const res = await fetch('http://localhost:5000/generateFromSketch', {
       method: 'POST',
       mode: 'cors',
       headers: {
@@ -258,7 +259,7 @@ const flowSlice = createSlice({
       let dependencyGraph = JSON.parse(JSON.stringify(state.dependencyGraph))
       let nodeMappings = JSON.parse(JSON.stringify(state.flowEditorNodeMapping))
       const delNodeKey = action.payload
-      console.log("[removeNode] depGraph: ", dependencyGraph)
+      console.log("[removeNode] depGraph and its length: ", dependencyGraph, Object.keys(dependencyGraph).length)
       console.log("[removeNode] delNodeKey", delNodeKey)
 
       if (dependencyGraph[delNodeKey] !== undefined) {
@@ -268,20 +269,16 @@ const flowSlice = createSlice({
           const index = dependencyGraph[parent]['children'].indexOf(delNodeKey)
           dependencyGraph[parent]['children'].splice(index, 1)
         }
-  
-        dependencyGraph[delNodeKey]['children'].forEach( child => {
-          if (dependencyGraph[child] !== undefined) {
-            delete dependencyGraph[child]
-          }
-          if (nodeMappings[child] !== undefined) {
-            delete nodeMappings[child]
-          }
-        })
+
+        console.log("[flow slice] node mapping is ", nodeMappings)
+
+        removeChildrenNodeFromDepGraph(dependencyGraph, nodeMappings, delNodeKey)
   
         console.log("removeNodeFromDepGraph is called, del key: ", delNodeKey)
         delete dependencyGraph[delNodeKey]
       }
 
+      console.log('[flow slice] after removeNode, depGraph: ', dependencyGraph)
       return {
         ...state,
         dependencyGraph: dependencyGraph,
@@ -366,6 +363,7 @@ const flowSlice = createSlice({
       console.log(action.payload)
 
       const mergedGraph = Object.assign(oldDepGraph, newDepGraph)
+      console.log("[flow slice] after generate, the depGraph is ", mergedGraph)
 
       return {
         ...state,

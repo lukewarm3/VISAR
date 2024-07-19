@@ -82,6 +82,8 @@ export function ArgumentativeMenu ({ editor }) {
     const modalElem = buttonRef.current
     const nativeSelection = window.getSelection()
 
+    console.log('updateArgumentativeMenu called')
+
     if (modalElem === null) {
       return
     }
@@ -114,10 +116,11 @@ export function ArgumentativeMenu ({ editor }) {
       positionFloatingButton(modalElem, rect)
     } else {
       // console.log(`[updateFloatingGroup]: element is inactive, isElaborate: ${isElaborate}`)
+      console.log("cannot show the argumentative menu")
       positionFloatingButton(modalElem, null)
     }
 
-    console.log('updateArgumentativeMenu called')
+    
 
     return true
   }, [editor, isMenuOpen])

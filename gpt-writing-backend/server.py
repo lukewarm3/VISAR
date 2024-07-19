@@ -8,6 +8,7 @@ from pymongo import MongoClient
 
 app = Flask(__name__)
 cors = CORS(app)
+#CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
 app.config['CORS_HEADERS'] = 'Content-Type'
 model_type = "gpt-3.5-turbo"
 tempature = 0.6
@@ -392,6 +393,17 @@ def gpt_inference():
         res = {
             "response": response.choices[0].text.strip()
         }
+        return jsonify(res)
+
+@app.route("/keyword2", methods=["POST"])
+def keyword():
+    if request.method == "POST":
+        response = request.get_json()
+        prompt = response["prompt"]
+
+        res = {
+                "response": prompt
+            }
         return jsonify(res)
 
 

@@ -22,7 +22,8 @@ import {
   createCommand,
   KEY_BACKSPACE_COMMAND,
   KEY_ENTER_COMMAND,
-  INSERT_LINE_BREAK_COMMAND
+  INSERT_LINE_BREAK_COMMAND,
+  $isNodeSelection
 } from 'lexical'
 import { mergeRegister } from '@lexical/utils'
 import {
@@ -99,6 +100,7 @@ export function FloatingMenu ({ editor }) {  // show the floating menu (elaborat
       const domRange = nativeSelection.getRangeAt(0)
       let rect
       if (nativeSelection.anchorNode === rootElement) { // nativeSelection.anchorNode is usually just the text string, so ususally not equal
+        console.log("[floating menu] native selection's anchor node === root element")
         let inner = rootElement
         while (inner.firstElementChild != null) {
           inner = inner.firstElementChild
@@ -107,7 +109,6 @@ export function FloatingMenu ({ editor }) {  // show the floating menu (elaborat
       } else {
         rect = domRange.getBoundingClientRect()
       }
-
       positionFloatingButton(buttonElem, rect)  // buttonElem is the floating button
     } else {
       positionFloatingButton(buttonElem, null)
@@ -170,6 +171,11 @@ export function FloatingMenu ({ editor }) {  // show the floating menu (elaborat
       editor.registerCommand(
         SELECTION_CHANGE_COMMAND,
         () => {
+          console.log("[floating menu] selection is changed")
+          const selection = $getSelection()
+          console.log("[floating menu] selection's type is node selection ", $isNodeSelection(selection))
+          console.log("[floating menu] selection's type is range selection ", $isRangeSelection(selection))
+          console.log("[floating menu] the selection's anchor's offset: ", selection.anchor.offset)
           updateFloatingButton()
           return false
         },

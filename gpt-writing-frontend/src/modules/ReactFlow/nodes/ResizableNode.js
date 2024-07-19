@@ -37,6 +37,24 @@ import Button from '@mui/material/Button'
 import LoopIcon from '@mui/icons-material/Loop'
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
+import {
+  SELECTION_CHANGE_COMMAND,
+  $getSelection,
+  $setSelection,
+  $isRangeSelection,
+  $createParagraphNode,
+  $getNodeByKey,
+  $isParagraphNode,
+  $isTextNode,
+  $createRangeSelection,
+  $getRoot,
+  $createTextNode,
+  createCommand,
+  KEY_BACKSPACE_COMMAND,
+  KEY_ENTER_COMMAND,
+  INSERT_LINE_BREAK_COMMAND,
+  $isNodeSelection
+} from 'lexical'
 
 const ResizableNode = ({ data }) => {
   const [editor] = useLexicalComposerContext()
@@ -136,7 +154,6 @@ const ResizableNode = ({ data }) => {
                   ? 'solid yellow'
                   : '',
               borderRadius: 4,
-              borderWidth: 5
             }}
             onKeyDown={e => {
               if (e.shiftKey) {
@@ -156,6 +173,13 @@ const ResizableNode = ({ data }) => {
                 console.log(`node ${nodeId} selected`)
               }
               editor.setEditable(false)
+
+              editor.update(()=>{
+                const selection = $getSelection()
+                console.log("[resizableNode] selection is ", selection)
+                console.log("[resizableNode] selection's anchor node is ", selection.anchor.getNode(), selection.anchor.offset)
+                console.log("[resizableNode] selection's focus node is ", selection.focus.getNode(), selection.focus.offset)
+              })
             }}
           >
             <Box style={{ alignItems: 'center' }}>

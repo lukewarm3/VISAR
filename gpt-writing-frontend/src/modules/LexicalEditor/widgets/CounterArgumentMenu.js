@@ -170,7 +170,7 @@ export default function CounterArgumentMenu ({ editor }) {
       keyword = depGraph[flowKey]["prompt"] // the keyword needs to be the type of "featuredBy"
 
       // IP: https://visar.app:8088
-      fetch('https://visar.app/api/counterArguments', {
+      fetch('http://localhost:5000/counterArguments', {
         method: 'POST',
         mode: 'cors',
         headers: {

@@ -68,22 +68,34 @@ export function positionFloatingButton (buttonGroup, rect) {
 export function $maybeMoveChildrenSelectionToParent (parentNode, offset = 0) {
   if (offset !== 0) {
   }
-  const selection = $getSelection()
+  const selection = $getSelection() // selection is the last selection
+  console.log("[maybeMoveChildren] nodeToRemove is ", parentNode)
+  console.log("[maybeMoveChildren] selection is ", selection)
+  console.log("[maybeMoveChildren] selection's anchor's node is ", selection.anchor.getNode())
+  console.log("[maybeMoveChildren] selection's focus's node is ", selection.focus.getNode())
+  console.log("[maybeMoveChildren] selection's anchor's node's offset is ", selection.anchor.offset) // this will be 0
+  console.log("[maybeMoveChildren] selection's focus's node's offset is ", selection.focus.offset) // this will be 0
   // An element node is a node that can contain other nodes
   // if the node is element node, the node is the "parent"
   // this if statement checks if the node is a range or parent. If not range, or it is a leaf, then do not need to update anything 
   if (!$isRangeSelection(selection) || !$isElementNode(parentNode)) {
+    console.log("[maybeMoveChildren] the selection is range selection: ", $isRangeSelection(selection))
+    console.log("the parent node is not range selection or element node")
     return selection
   }
+  console.log("the parent node is range selection or element node")
   const { anchor, focus } = selection
   const anchorNode = anchor.getNode()
   const focusNode = focus.getNode()
+  console.log("[maybeMoveChildren] anchor offset and focus offset before is ", anchorNode.offset, focusNode.offset)
+  console.log("[maybeMoveChildren] nodeToRemove is anchor's ancestor: ", $hasAncestor(anchorNode, parentNode))
   if ($hasAncestor(anchorNode, parentNode)) {
     anchor.set(parentNode.__key, 0, 'element')
   }
   if ($hasAncestor(focusNode, parentNode)) {
     focus.set(parentNode.__key, 0, 'element')
   }
+  console.log("[maybeMoveChildren] anchor offset and focus offset after is ", anchorNode.offset, focusNode.offset)
   return selection
 }
 
@@ -97,6 +109,8 @@ export function moveSelectionPointToSibling (
   let siblingKey = null
   let offset = 0
   let type = null
+  console.log("previous sibling of removed node is ", prevSibling)
+  console.log("next sibling of removed node is ", nextSibling)
   if (prevSibling !== null) {
     siblingKey = prevSibling.__key
     if ($isTextNode(prevSibling)) {
@@ -119,7 +133,9 @@ export function moveSelectionPointToSibling (
   if (siblingKey !== null && type !== null) {
     point.set(siblingKey, offset, type)
   } else {
+    console.log("[moveSelectionPointToSibling] removed node has no siblings")
     offset = node.getIndexWithinParent()
+    console.log("???offset within parent is ", offset)
     if (offset === -1) {
       // Move selection to end of parent
       offset = parent.getChildrenSize()
@@ -137,17 +153,25 @@ export function $updateElementSelectionOnCreateDeleteNode (
   const focus = selection.focus
   const anchorNode = anchor.getNode()
   const focusNode = focus.getNode()
+  console.log("[updateElementSelectionOnCreateDeleteNode] anchor node is ", anchorNode, anchor.offset)
+  console.log("[updateElementSelectionOnCreateDeleteNode] focus node is ", focusNode, focus.offset)
   if (!parentNode.is(anchorNode) && !parentNode.is(focusNode)) {
+    console.log("parent is not selection's anchor node and not selection's focus node")
     return
   }
+  console.log("parent is selection's anchor node or selection's focus node")
   const parentKey = parentNode.__key
   // Single node. We shift selection but never redimension it
   if (selection.isCollapsed()) {
+    console.log("[updateElementSelectionOnCreateDeleteNode] selection is collapsed")
+    // selection is range selection, but it is collapsed
     const selectionOffset = anchor.offset
     if (nodeOffset <= selectionOffset) {
       const newSelectionOffset = Math.max(0, selectionOffset + times)
       anchor.set(parentKey, newSelectionOffset, 'element')
       focus.set(parentKey, newSelectionOffset, 'element')
+      console.log("[updateElementSelectionOnCreateDeleteNode] anchor node is ", anchor.getNode(), anchor.offset)
+      console.log("[updateElementSelectionOnCreateDeleteNode] focus node is ", focus.getNode(), focus.offset)
       // The new selection might point to text nodes, try to resolve them
       $updateSelectionResolveTextNodes(selection)
     }
@@ -254,7 +278,9 @@ export function removeNode (
   if ($isRangeSelection(selection) && restoreSelection) {
     const anchor = selection.anchor
     const focus = selection.focus
+    console.log("[removeNode] where is anchor and focus: ", anchor.offset, focus.offset)
     if (anchor.key === key) {
+      console.log("[removeNode] anchor key is the removed node key")
       moveSelectionPointToSibling(
         anchor,
         nodeToRemove,
@@ -265,6 +291,7 @@ export function removeNode (
       selectionMoved = true
     }
     if (focus.key === key) {
+      console.log("[removeNode] focus key is the removed node key")
       moveSelectionPointToSibling(
         focus,
         nodeToRemove,
@@ -274,14 +301,18 @@ export function removeNode (
       )
       selectionMoved = true
     }
+    console.log("[removeNode] after: where is anchor and focus: ", anchor.offset, focus.offset)
   }
 
   if ($isRangeSelection(selection) && restoreSelection && !selectionMoved) {
     // Doing this is O(n) so lets avoid it unless we need to do it
     const index = nodeToRemove.getIndexWithinParent()
-    removeFromParent(nodeToRemove)
+    console.log("[removeNode] the index of nodeToRemove within parent is ", index)
+    removeFromParent(nodeToRemove) // linked list remove
+    console.log("[removeNode] nodeToRemove's parent is ", parent)
     $updateElementSelectionOnCreateDeleteNode(selection, parent, index, -1)
   } else {
+    console.log("selectin is rangeSelection ", $isRangeSelection(selection))
     removeFromParent(nodeToRemove)
   }
 
@@ -328,6 +359,7 @@ export function removeFromParent (node) {
     const writableParent = oldParent.getWritable()
     const prevSibling = node.getPreviousSibling()
     const nextSibling = node.getNextSibling()
+    console.log("[removeFromParent] nodeToRemove's prev and next sibling are ", prevSibling, nextSibling)
     // TODO: this function duplicates a bunch of operations, can be simplified.
     if (prevSibling === null) {
       if (nextSibling !== null) {
@@ -513,8 +545,8 @@ export function addGenartionsToEditor (
         if ($isTextBlockNode(pChild)) {
           const linebreakNode1 = $createLineBreakNode()
           const linebreakNode2 = $createLineBreakNode()
-          pChild.append(linebreakNode1)
-          pChild.append(linebreakNode2)
+          pChild.append(linebreakNode1) // change a new line
+          pChild.append(linebreakNode2) // add one blank line
         }
       })
     }
@@ -847,3 +879,17 @@ export function highlightDepText (editor, res) {
 }
 
 export function highlightCertainText () {}
+
+export function removeChildrenNodeFromDepGraph(dependencyGraph, nodeMappings, delNodeKey) {
+  if (dependencyGraph[delNodeKey]['children'].length === 0) {
+    return
+  }
+
+  dependencyGraph[delNodeKey]['children'].forEach( child => {
+    if (dependencyGraph[child] !== undefined && nodeMappings[child] !== undefined) {
+      removeChildrenNodeFromDepGraph(dependencyGraph, nodeMappings, child)
+      delete dependencyGraph[child]
+      delete nodeMappings[child]
+    }
+  })
+}
