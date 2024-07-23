@@ -781,7 +781,7 @@ export default function ToolbarPlugin () {
               aria-label='Load Draft'
               onClick={() => {
                 editor.update(() => {
-                  const res = fetch('https://visar.app/api/loadDraft', {
+                  const res = fetch('http://localhost:5000/loadDraft', {
                     method: 'POST',
                     mode: 'cors',
                     headers: {
@@ -825,7 +825,7 @@ export default function ToolbarPlugin () {
                   console.log('flowSlice: ', flowSlice)
                   console.log('editorSlice: ', editorSlice)
 
-                  const res = fetch('https://visar.app/api/saveDraft', {
+                  const res = fetch('http://127.0.0.1:5000/saveDraft', {
                     method: 'POST',
                     mode: 'cors',
                     headers: {

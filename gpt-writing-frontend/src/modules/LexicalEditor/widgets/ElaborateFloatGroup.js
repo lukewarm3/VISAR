@@ -150,8 +150,9 @@ export default function ElaborateFLoatingGroup({ editor }) {
     // console.log("Nodes:")
     // console.log(nodes)
     setPromptedText(selected_text);
+    console.log("[elaborate float group] selected text is", selected_text)
     
-    const fetchPromise = fetch('https://visar.app/api/keyword', {
+    const fetchPromise = fetch('http://127.0.0.1:5000/keyword', {
       method: 'POST',
       mode: 'cors',
       headers: {
@@ -183,7 +184,7 @@ export default function ElaborateFLoatingGroup({ editor }) {
     setFetchingAlertOpen(true);
 
     // IP: https://visar.app:8088
-    fetch("https://visar.app/api/prompts", {
+    fetch("http://127.0.0.1:5000/prompts", {
       method: "POST",
       mode: "cors",
       headers: {

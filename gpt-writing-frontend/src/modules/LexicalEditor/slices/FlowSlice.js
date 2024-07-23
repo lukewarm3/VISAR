@@ -47,7 +47,7 @@ export const NodeEdgeTypeMapping = {
 export const logInteractionData = createAsyncThunk(
   "flow/logInteractionData",
   async (args, { getState }) => {
-    const res = await fetch("https://visar.app/api/logInteractionData", {
+    const res = await fetch("http://127.0.0.1:5000/logInteractionData", {
       method: "POST",
       mode: "cors",
       headers: {
@@ -91,7 +91,7 @@ export const generateFromDepGraph = createAsyncThunk(
       };
     }
 
-    const res = await fetch("https://visar.app/api/generateFromDepGraph", {
+    const res = await fetch("http://127.0.0.1:5000/generateFromDepGraph", {
       method: "POST",
       mode: "cors",
       headers: {
@@ -120,7 +120,7 @@ export const generateFromSketch = createAsyncThunk(
   async (editor, { getState }) => {
     const state = getState();
 
-    const res = await fetch("https://visar.app/api/generateFromSketch", {
+    const res = await fetch("http://127.0.0.1:5000/generateFromSketch", {
       method: "POST",
       mode: "cors",
       headers: {

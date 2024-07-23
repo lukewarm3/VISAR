@@ -1,7 +1,7 @@
 import re
 import os
 import json
-import openai
+from openai import OpenAI
 from flask import Flask, redirect, render_template, request, url_for, make_response, jsonify
 from flask_cors import CORS, cross_origin
 from pymongo import MongoClient
@@ -17,7 +17,7 @@ enablePreload = False
 test = False
 
 with open('openai_key.json') as key_file:
-    openai.api_key = json.load(key_file)['key']
+    OpenAIClient = OpenAI(api_key=json.load(key_file)['key'])
 
 with open('mongoDB_key.json') as key_file:
     mongoDB_key = json.load(key_file)['key']
@@ -32,14 +32,15 @@ def signup():
     if request.method == "POST":
         response = request.get_json()
         username = response["username"]
-        password = response["password"]
+        #password = response["password"]
         condition = response["condition"]
-        print(f"username: {username}, password: {password}")
+        print(f"username: {username}")
         user = db.users.find_one({"username": username})
         if user is not None:
             # return existing user
             return jsonify({"status": "success", "message": "Login successfully", "preload": False, "editorState": "", "flowSlice": "", "editorSlice": "", "taskProblem": "", "taskDescription": ""})
-        db.users.insert_one({"username": username, "password": password, "condition": condition, "latestSessionId": -1, "condTopicMapping": {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5}})
+        #db.users.insert_one({"username": username, "password": password, "condition": condition, "latestSessionId": -1, "condTopicMapping": {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5}})
+        db.users.insert_one({"username": username, "condition": condition, "latestSessionId": -1, "condTopicMapping": {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5}})
         print("Signup successfully")
         return jsonify({"status": "success", "message": "Login successfully", "preload": False, "editorState": "", "flowSlice": "", "editorSlice": "", "taskProblem": "", "taskDescription": ""})
 
@@ -137,7 +138,7 @@ def implementSupportingArgument(supportingArgument, argumentSupported):
     ]
 
     # prompt = f'''Please list the counter arguments that can challenge the argument: "Houston is a good city because it has a convenient transportaion and afforable living cost"'''
-    response = openai.ChatCompletion.create(
+    response = OpenAIClient.chat.completions.create(
         model=model_type,
         messages=messages,
         temperature=tempature,
@@ -160,7 +161,7 @@ def implementCounterArgument(keyword, counterArgument, argumentAttacked):
     ]
 
     # prompt = f'''Please list the counter arguments that can challenge the argument: "Houston is a good city because it has a convenient transportaion and afforable living cost"'''
-    response = openai.ChatCompletion.create(
+    response = OpenAIClient.chat.completions.create(
         model=model_type,
         messages=messages,
         temperature=tempature,
@@ -180,7 +181,7 @@ def implementElaboration(prompt, context):
         {"role": "user", "content": f'''Please write a paragraph that elaborates on my argument "{context}" by considering the following discussion point "{prompt}":'''}
     ]
 
-    response = openai.ChatCompletion.create(
+    response = OpenAIClient.chat.completions.create(
         model=model_type,
         messages=messages,
         temperature=tempature,
@@ -200,7 +201,7 @@ def generateStartingSentence(keyword, discussionPoints, globalContext):
         {"role": "user", "content": f'''Write a starting sentence for the paragraph that elaborates on the argument {globalContext} from the perspective of {keyword}'''}
     ]
 
-    response = openai.ChatCompletion.create(
+    response = OpenAIClient.chat.completions.create(
         model=model_type,
         messages=messages,
         temperature=tempature,
@@ -223,7 +224,7 @@ def implementTopicSentence():
         {"role": "user", "content": f'''Please write a sentence that claim my argument "{prompt}":'''}
     ]
 
-    response = openai.ChatCompletion.create(
+    response = OpenAIClient.chat.completions.create(
         model=model_type,
         messages=messages,
         temperature=tempature,
@@ -246,7 +247,7 @@ def generateTopicSentence(prompt, context):
         {"role": "user", "content": f'''Please write a sentence that claim my argument "{prompt}":'''}
     ]
 
-    response = openai.ChatCompletion.create(
+    response = OpenAIClient.chat.completions.create(
         model=model_type,
         messages=messages,
         temperature=tempature,
@@ -272,7 +273,7 @@ def gpt_implement_counter_argument():
         ]
 
         # prompt = f'''Please list the counter arguments that can challenge the argument: "Houston is a good city because it has a convenient transportaion and afforable living cost"'''
-        response = openai.ChatCompletion.create(
+        response = OpenAIClient.chat.completions.create(
             model=model_type,
             messages=messages,
             temperature=tempature,
@@ -303,7 +304,7 @@ def gpt_implement_supporting_argument():
         ]
 
         # prompt = f'''Please list the counter arguments that can challenge the argument: "Houston is a good city because it has a convenient transportaion and afforable living cost"'''
-        response = openai.ChatCompletion.create(
+        response = OpenAIClient.chat.completions.create(
             model=model_type,
             messages=messages,
             temperature=tempature,
@@ -333,7 +334,7 @@ def gpt_implement_elaboration():
             {"role": "user", "content": f'''Please write a paragraph that elaborates on my argument "{context}" by considering the following discussion point "{prompt}":'''}
         ]
 
-        response = openai.ChatCompletion.create(
+        response = OpenAIClient.chat.completions.create(
             model=model_type,
             messages=messages,
             temperature=tempature,
@@ -365,7 +366,7 @@ def gpt_keyword_sentence():
             {"role": "user", "content": f'''Write a starting sentence for the paragraph that elaborates on the argument {context} from the perspective of {prompt}'''}
         ]
 
-        response = openai.ChatCompletion.create(
+        response = OpenAIClient.chat.completions.create(
             model=model_type,
             messages=messages,
             temperature=tempature,
@@ -383,7 +384,7 @@ def gpt_keyword_sentence():
 def gpt_inference():
     if request.method == "GET":
         prompt = request.args.get("prompt")
-        response = openai.ChatCompletion.create(
+        response = OpenAIClient.chat.completions.create(
             model=model_type,
             prompt=prompt,
             temperature=tempature,
@@ -479,7 +480,7 @@ def gpt_fetch_keywords():
         # if mode == "evidence":
         #     prompt = evidence_example + "\n\n" + "Types of evidence for supporting: " + prompt
 
-        response = openai.ChatCompletion.create(
+        response = OpenAIClient.chat.completions.create(
             model=model_type,
             messages=messages,
             temperature=tempature,
@@ -562,7 +563,7 @@ def gpt_fetch_prompts():
                 {"role": "user", "content": f'''Please list key discussion points that are worth to include in order to support arguemnt: "{context}" from perspective of {key}'''},
             ]
 
-            response = openai.ChatCompletion.create(
+            response = OpenAIClient.chat.completions.create(
                 model=model_type,
                 messages=messages,
                 temperature=tempature,
@@ -618,7 +619,7 @@ def gpt_rewrite():
 
             prompt = f"Rephrase the following sentence in a different way: {curSent}"
             print(f"[/rewrite] prompt: {prompt}")
-            response = openai.ChatCompletion.create(
+            response = OpenAIClient.chat.completions.create(
                 model=model_type,
                 messages=messages,
                 temperature=tempature,
@@ -639,7 +640,7 @@ def gpt_rewrite():
                 {"role": "user", "content": f'''Rephrase the following sentence "{curSent}" with the instruction: "{furInstruction}"'''}
             ]
 
-            response = openai.ChatCompletion.create(
+            response = OpenAIClient.chat.completions.create(
                 model=model_type,
                 messages=messages,
                 temperature=tempature,
@@ -659,7 +660,7 @@ def gpt_rewrite():
                     "content": f'''I just made an argument: {curSent}. I know this argument has the following logical weaknesses: {"; ".join(weaknesses)}. Rewrite the argument to fix the logical weaknesses.'''''}
             ]
 
-            response = openai.ChatCompletion.create(
+            response = OpenAIClient.chat.completions.create(
                 model=model_type,
                 messages=messages,
                 temperature=tempature,
@@ -747,7 +748,7 @@ Based on the argumentation theory, find logical weaknesses of the argument: "Not
     prompt = elaborate_example + "\n\n" + \
         f'''Based on the argumentation theory, find logical weaknesses of the argument: "Notre Dame is a great school to attend because it has outstanding faculty"'''
 
-    response = openai.ChatCompletion.create(
+    response = OpenAIClient.chat.completions.create(
         model=model_type,
         messages=messages,
         temperature=tempature,
@@ -798,7 +799,7 @@ def gpt_supporting_argument():
             {"role": "user", "content": f'''Please list kinds of supporting arguments or evidences that can increase the credibility of the argument: {context}"'''},
         ]
 
-        response = openai.ChatCompletion.create(
+        response = OpenAIClient.chat.completions.create(
             model=model_type,
             messages=messages,
             temperature=tempature,
@@ -834,7 +835,7 @@ def gpt_counter_argument():
             {"role": "user", "content": f'''Please list the counter arguments that can challenge the argument: "{context}" from the perspective of "{keyword}. Directly list the counter arguments, do not include any prefix sentence."'''},
         ]
 
-        response = openai.ChatCompletion.create(
+        response = OpenAIClient.chat.completions.create(
             model=model_type,
             messages=messages,
             temperature=tempature,
@@ -882,7 +883,7 @@ def gpt_completion():
             {"role": "user", "content": f'''Please complete the following prompt: "{prompt}"'''},
         ]
 
-        response = openai.ChatCompletion.create(
+        response = OpenAIClient.chat.completions.create(
             model=model_type,
             messages=messages,
             temperature=tempature,
@@ -1021,7 +1022,7 @@ def get_generate_from_sketch():
             for dp in depGraph[keyword]:
                 gpt_prompt = f'''Please elaborate the argument "${globalContext}" from the perspective of ${keyword} by considering the following questions: ${dp["content"]}'''
 
-                response = openai.ChatCompletion.create(
+                response = OpenAIClient.chat.completions.create(
                     model=model_type,
                     prompt=gpt_prompt,
                     temperature=tempature,
@@ -1058,7 +1059,7 @@ Please synthesize these key points into a cohesive thesis statement.'''},
 Please synthesize these key points into a cohesive thesis statement.'''}
         ]
 
-        response = openai.ChatCompletion.create(
+        response = OpenAIClient.chat.completions.create(
             model=model_type,
             messages=messages,
             temperature=tempature,

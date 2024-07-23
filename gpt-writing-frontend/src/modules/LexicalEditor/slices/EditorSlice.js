@@ -42,7 +42,7 @@ export const generateRewrite = createAsyncThunk(
     // const state = getState();
     console.log("[generateRewrite] args:", args)
     // const { basePrompt, mode, furInstruction, curSent } = args;
-    const res = await fetch("http://localhost:5000/rewrite", {
+    const res = await fetch("http://127.0.0.1:5000/rewrite", {
       method: "POST",
       mode: "cors",
       headers: {
