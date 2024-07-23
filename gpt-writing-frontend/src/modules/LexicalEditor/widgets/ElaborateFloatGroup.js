@@ -139,10 +139,10 @@ export default function ElaborateFLoatingGroup({ editor }) {
     }
 
     return true;
-  }, [editor, isElaborate]);
+  }, [editor, isElaborate, type]);
 
   // fetch the strategic Keywordensions for elaborating the selected text
-  const fetchKeyword = () => {
+  const fetchKeyword = useCallback(() => {
     const selection = $getSelection();
     const selected_text = selection.getTextContent();
     const nodes = selection.getNodes();
@@ -151,7 +151,7 @@ export default function ElaborateFLoatingGroup({ editor }) {
     // console.log(nodes)
     setPromptedText(selected_text);
     
-    const fetchPromise = fetch('http://localhost:5000/keyword2', {
+    const fetchPromise = fetch('https://visar.app/api/keyword', {
       method: 'POST',
       mode: 'cors',
       headers: {
@@ -176,14 +176,14 @@ export default function ElaborateFLoatingGroup({ editor }) {
       }).catch(error => {
         console.log("error is ", error)
       });
-  };
+  }, [dispatch]);
 
   const fetchDiscussionPoints = () => {
     dispatch(setPromptStatus("fetching"));
     setFetchingAlertOpen(true);
 
     // IP: https://visar.app:8088
-    fetch("http://localhost:5000/prompts", {
+    fetch("https://visar.app/api/prompts", {
       method: "POST",
       mode: "cors",
       headers: {
@@ -270,7 +270,7 @@ export default function ElaborateFLoatingGroup({ editor }) {
     editor.getEditorState().read(() => {
       updateFloatingGroup();
     });
-  }, [editor, isElaborate]);
+  }, [editor, isElaborate, updateFloatingGroup]);
 
   useEffect(() => {
     // const buttonElem = buttonRef.current;
@@ -324,7 +324,7 @@ export default function ElaborateFLoatingGroup({ editor }) {
         highPriority
       )
     );
-  }, [editor, setCurSelectedNodeKey]);
+  }, [editor, dispatch, fetchKeyword]);
 
   const onCLickElaboratePredict = () => {
     editor.update(() => {
@@ -370,7 +370,7 @@ export default function ElaborateFLoatingGroup({ editor }) {
     dispatch(loadNodes({ selectedText: promptedText, selectedKeywords: selectedKeywords , discussionPoints: selectedPrompts, curRangeNodeKey: curRangeNodeKey}));
     // curRangeNodeKey is the selected text node in the paragraph
     dispatch(setFlowModalOpen());
-    dispatch(setRangeGenerationMode(true)) // ? what is the use of rangeGenerationMode
+    dispatch(setRangeGenerationMode(true)) //
     positionFloatingButton(buttonRef.current, null); // hide the floating button (the second parameter is null)
     dispatch(setPromptStatus("empty"))
     dispatch(setIsReactFlowInModal())

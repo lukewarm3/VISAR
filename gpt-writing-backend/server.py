@@ -1032,6 +1032,45 @@ def get_generate_from_sketch():
         output["generations"] = generations
         return jsonify(output)
 
+@app.route("/synthesize", methods=["POST"])
+def synthesize_thesis():
+    if request.method == "POST":
+        response = request.get_json()
+
+        keyPoints = response["keyPoints"]
+        keyPointsSentence = ""
+
+        for index, point in enumerate(keyPoints, 1):
+            keyPointsSentence += f"{index}. {point}\n"
+        
+        print("key point sentence is", keyPointsSentence)
+        messages = [
+            {"role": "system", "content": "You are a helpful writing assistant. Your student has gathered several key points/facts, but he cannot see the bigger picture of these ideas. Therefore, you are given those key points/facts, and you need to think of the thesis statement that introduces the main topic and purpose of those key points/facts."},
+            {"role": "user", "content": '''Here are several separate key points:
+1. In healthcare, AI algorithms can analyze medical data to provide accurate diagnoses and personalized treatment plans, while machine learning models predict disease outbreaks, enabling preventative measures. Additionally, robotic surgery, powered by AI, offers precision and reduces recovery time for patients.
+2. For sustainable development, AI optimizes the performance and efficiency of renewable energy sources like wind and solar power. Smart grids, managed by AI, balance energy supply and demand, reducing wastage. Furthermore, predictive maintenance, facilitated by AI, minimizes downtime and repair costs for renewable energy infrastructure.
+3. In education, AI-driven personalized learning platforms adapt to individual student needs, enhancing learning outcomes. Virtual tutors, powered by AI, provide round-the-clock assistance and support to students. Data analytics in education helps identify areas where students struggle, allowing for targeted interventions.
+
+Please synthesize these key points into a cohesive thesis statement.'''},
+            {"role": "assistant", "content":"The integration of artificial intelligence (AI) into various sectors can lead to significant advancements in healthcare, sustainable development through renewable energy, and education technology, ultimately transforming society."},
+            {"role": "user", "content":f'''Here are several separate key points:
+             {keyPointsSentence}
+Please synthesize these key points into a cohesive thesis statement.'''}
+        ]
+
+        response = openai.ChatCompletion.create(
+            model=model_type,
+            messages=messages,
+            temperature=tempature,
+            max_tokens=max_tokens
+        )
+
+        res = response.choices[0].message.content.strip()
+
+        response = {"response": res}
+        return jsonify(response)
+
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000, host="127.0.0.1")
