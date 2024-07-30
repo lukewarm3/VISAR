@@ -105,6 +105,7 @@ export default function ElaborateFLoatingGroup({ editor }) {
 
     let condition;
     const rootElement = editor.getRootElement();
+    const domRange = nativeSelection.rangeCount > 0 ? nativeSelection.getRangeAt(0) : null
 
     if (type === "elaborate") {
       condition = selection != null &&
@@ -119,8 +120,7 @@ export default function ElaborateFLoatingGroup({ editor }) {
       isElaborate;
     }
 
-    if (condition) {
-      const domRange = nativeSelection.getRangeAt(0);
+    if (condition && domRange) {
       let rect;
       if (nativeSelection.anchorNode === rootElement) {
         let inner = rootElement;

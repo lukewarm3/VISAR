@@ -47,18 +47,21 @@ import {
   setStudyCondition,
   setUsername,
   setSessionId,
-  setTaskDescription
+  setTaskDescription,
+  setEditorSliceStates
 } from './slices/EditorSlice'
-import { setNodeSelected } from './slices/FlowSlice'
+import { setFlowSliceStates, setNodeSelected } from './slices/FlowSlice'
 import SeeAlternativeModal from './widgets/SeeAlternativeModal'
 import FixWeaknessModal from './widgets/FixWeaknessModal'
 import { ADD_EXAMPLE_COMMAND } from './commands/SelfDefinedCommands'
 import RefineModal from './widgets/RefineModal'
 import ReactFlow, { useReactFlow, ReactFlowProvider } from 'reactflow'
 import UpdateModal from './widgets/UpdateModal'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import ManualAddNodeModal from './widgets/ManualAddNodeModal'
 import TaskDescriptionPlugin from './plugins/TaskDescriptionPlugin'
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
+import LoadEditorStatePlugin from './plugins/LoadEditorStatePlugin'
 
 function Placeholder () {
   return <div className='editor-placeholder'>Enter some rich text...</div>
@@ -148,6 +151,7 @@ export default function Editor () {
   )
   const isCurNodeEditable = useSelector(state => state.editor.isCurNodeEditable)
   const condition = useSelector(state => state.editor.condition)
+  const [editorState, setEditorState] = useState(null)
 
   useEffect(() => {
     console.log('set condition', location.state.condition)
@@ -159,6 +163,14 @@ export default function Editor () {
       dispatch(setUsername(location.state.username))
       dispatch(setSessionId(location.state.sessionId))
       dispatch(setTaskDescription(location.state.taskDescription))
+      if (location.state.preload === true) {
+        console.log("[editor] editor state is", location.state.editorState)
+        console.log("[editor] editor slice is", location.state.editorSlice)
+        console.log("[editor] flow slice is", location.state.flowSlice)
+        dispatch(setEditorSliceStates(location.state.editorSlice))
+        dispatch(setFlowSliceStates(location.state.flowSlice))
+        setEditorState(location.state.editorState)
+      }
     }
   }, [location])
 
@@ -170,6 +182,7 @@ export default function Editor () {
         </AppBar>
         <Main open={mindmapOpen}>
           <div className='editor-container'>
+            <LoadEditorStatePlugin editorState={editorState}/>
             <FloatingButtonPlugin />
             <LoadingPlugin />
             <div className='editor-inner'>

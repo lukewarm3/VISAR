@@ -93,15 +93,15 @@ export default function CounterArgumentMenu ({ editor }) {
     }
 
     const rootElement = editor.getRootElement()
+    const domRange = nativeSelection.rangeCount > 0 ? nativeSelection.getRangeAt(0) : null
 
     const condition =
       selection != null &&
       rootElement != null &&
       rootElement.contains(nativeSelection.anchorNode) &&
-      showPanel
+      showPanel && domRange
 
     if (condition) {
-      const domRange = nativeSelection.getRangeAt(0)
       let rect
       if (nativeSelection.anchorNode === rootElement) {
         let inner = rootElement

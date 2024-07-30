@@ -16,6 +16,7 @@ import {
 import {
   addThesisToEditor,
   DFSGetText,
+  filterNodesByClassName,
   positionFloatingButton,
 } from "../utils";
 import { useDispatch, useSelector } from "react-redux";
@@ -48,10 +49,22 @@ const BottomUpMenu = ({ editor }) => {
     const buttonElem = buttonRef.current;
     const nativeSelection = window.getSelection();
 
-    const domRange = nativeSelection.getRangeAt(0);
+    let nodes = null;
+    if (selection) {
+      nodes = selection.getNodes();
+    } else {
+      return;
+    }
 
-    const selectedRects = domRange.getClientRects();
-    if (buttonElem === null) return;
+    //const paragraphNodes = filterNodesByClassName(editor, nodes, "dir")
+    //console.log("paragraph nodes are ", paragraphNodes)
+    const paragraphNodes = nodes.filter(
+      (node) => node.getType() === "paragraph"
+    );
+
+    const domRange =
+      nativeSelection.rangeCount > 0 ? nativeSelection.getRangeAt(0) : null;
+    if (buttonElem === null || domRange === null) return;
 
     const rootElement = editor.getRootElement();
     if (
@@ -59,8 +72,10 @@ const BottomUpMenu = ({ editor }) => {
       !nativeSelection.isCollapsed &&
       rootElement != null &&
       rootElement.contains(nativeSelection.anchorNode) &&
-      selectedRects.length > 1
+      paragraphNodes.length > 1
     ) {
+      const selectedRects = domRange.getClientRects();
+      console.log("[bottom up menu] selectedRects are ", selectedRects);
       const rect = selectedRects[selectedRects.length - 1];
       //console.log("[buttom up menu] last selected rect is ", rect);
       positionFloatingButton(buttonElem, rect);
@@ -73,8 +88,8 @@ const BottomUpMenu = ({ editor }) => {
 
   const onGenerationThesisClick = async () => {
     editor.update(() => {
-      editor.dispatchCommand(SHOW_LOADING_COMMAND, { show: true })
-    })
+      editor.dispatchCommand(SHOW_LOADING_COMMAND, { show: true });
+    });
     const buttonElem = buttonRef.current;
 
     const selection = $getSelection();
@@ -96,44 +111,47 @@ const BottomUpMenu = ({ editor }) => {
     });
     console.log("text in each paragraph is", textInEachParagraph);
 
-    // const response = await fetch("http://127.0.0.1:5000/synthesize", {
-    //   method: "POST",
-    //   mode:"cors",
-    //   headers:{
-    //     "Accept": "application/json",
-    //     "Content-Type": "application/json",
-    //     'Access-Control-Allow-Origin': '*'
-    //   },
-    //   body: JSON.stringify({
-    //     keyPoints: textInEachParagraph
-    //   })
-    // })
+    const response = await fetch("http://127.0.0.1:5000/synthesize", {
+      method: "POST",
+      mode: "cors",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({
+        keyPoints: textInEachParagraph,
+      }),
+    });
 
-    // const data = await response.json()
-    // const thesisText = data["response"]
+    const data = await response.json();
+    const thesisText = data["response"];
     editor.update(() => {
-      editor.dispatchCommand(SHOW_LOADING_COMMAND, { show: false })
-    })
+      editor.dispatchCommand(SHOW_LOADING_COMMAND, { show: false });
+    });
 
-    const thesisText = "this is the thesis statement";
+    //const thesisText = "this is the thesis statement";
 
     const keyPointsEditorNodeKeys = [];
     const keyPoints = [];
-    paragraphNodes.forEach((paragraph) => {
-      let editorNode = paragraph;
-      while ($isElementNode(editorNode)) {
-        const children = editorNode.getChildren();
-        if (children.length > 0) {
-          editorNode = children[0];
-        } else {
-          break;
+    editor.update(() => {
+      paragraphNodes.forEach((paragraph) => {
+        let editorNode = paragraph;
+        while ($isElementNode(editorNode)) {
+          const children = editorNode.getChildren();
+          if (children.length > 0) {
+            editorNode = children[0];
+          } else {
+            break;
+          }
         }
-      }
-      if ($isTextNode(editorNode) && editorNode.getTextContent().length > 0) {
-        keyPointsEditorNodeKeys.push(editorNode.getKey());
-        keyPoints.push(editorNode.getTextContent());
-      }
+        if ($isTextNode(editorNode) && editorNode.getTextContent().length > 0) {
+          keyPointsEditorNodeKeys.push(editorNode.getKey());
+          keyPoints.push(editorNode.getTextContent());
+        }
+      });
     });
+
     console.log("keyPointsEditorNodeKeys are", keyPointsEditorNodeKeys);
 
     dispatch(

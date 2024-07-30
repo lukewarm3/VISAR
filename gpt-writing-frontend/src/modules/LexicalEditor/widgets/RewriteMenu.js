@@ -31,18 +31,19 @@ export default function RewriteModal ({ editor }) {
     }
 
     const rootElement = editor.getRootElement()
+    const domRange = nativeSelection.rangeCount > 0 ? nativeSelection.getRangeAt(0) : null
 
     const condition =
       selection != null &&
       rootElement != null &&
       rootElement.contains(nativeSelection.anchorNode) &&
-      isRewrite
+      isRewrite && domRange
 
     // console.log('[condition] isRewrite is ', isRewrite)
     // console.log('Whole condition is ', condition)
 
     if (condition) {
-      const domRange = nativeSelection.getRangeAt(0)
+      
       let rect
       if (nativeSelection.anchorNode === rootElement) {
         let inner = rootElement
