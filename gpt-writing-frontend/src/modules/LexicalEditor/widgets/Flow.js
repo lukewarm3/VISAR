@@ -292,6 +292,7 @@ export default function Flow ({ editor, mode, sidebar }) {
         if (change.type === 'remove') {
           const editorNodeKey = nodeMappings[change.id]
           const nodeToRemove = $getNodeByKey(editorNodeKey) // the editor text node
+          console.log("[flow] node to remove is ", nodeToRemove)
           if (nodeToRemove !== null && nodeToRemove !== undefined) {
             removeNode(nodeToRemove)
           }

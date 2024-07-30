@@ -9,6 +9,8 @@ import {
 import { addClassNamesToElement } from '@lexical/utils'
 import { $applyNodeReplacement, TextNode } from 'lexical'
 
+let total = 0
+
 /** @noInheritDoc */
 export class HighlightDepNode extends TextNode {
 
@@ -101,6 +103,9 @@ export function $createHighlightDepNode (hl_type, text = '', key = ''): Highligh
     // $applyNodeReplacement is used to properly handle the replacement of the node within the editor’s state, 
     // ensuring all necessary updates and state integrations are performed.
   } else {
+    // total += 1
+    // const key = total.toString()
+    // console.log("[highlight dep node] key is ", key)
     return $applyNodeReplacement(new HighlightDepNode(text, hl_type))
   }
   

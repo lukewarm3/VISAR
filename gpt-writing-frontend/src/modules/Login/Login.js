@@ -71,9 +71,9 @@ export default function SignIn () {
         let flowSlice = null
         let editorSlice = null
         if (res.preload === true) {
-          editorState = res.editorState
-          flowSlice = res.flowSlice
-          editorSlice = res.editorSlice
+          editorState = JSON.parse(res.editorState)
+          flowSlice = JSON.parse(res.flowSlice)
+          editorSlice = JSON.parse(res.editorSlice)
         }
 
         const taskProblem = res.taskProblem

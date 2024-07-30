@@ -13,7 +13,7 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 model_type = "gpt-3.5-turbo"
 tempature = 0.6
 max_tokens = 2048
-enablePreload = False
+enablePreload = True # enable the preload of editor state, editor node, and flow node
 test = False
 
 with open('openai_key.json') as key_file:
@@ -23,8 +23,13 @@ with open('mongoDB_key.json') as key_file:
     mongoDB_key = json.load(key_file)['key']
 
 # Update your mongoDB key here. You need to create a new mongoDB database called "gptwriting", and create collections called "users" and "interactionData" in the database.
-client = MongoClient(mongoDB_key)
-db = client.gptwriting
+try:
+    client = MongoClient(mongoDB_key)
+    db = client.gptwriting
+    print("Successfully connect to mongoDB")
+except:
+    print("fail to connect to mongoDB")
+
 
 
 @app.route("/signup", methods=["POST"])
@@ -37,6 +42,13 @@ def signup():
         print(f"username: {username}")
         user = db.users.find_one({"username": username})
         if user is not None:
+            # there is no login, but "sign up" at this time
+            if enablePreload:
+                # get the states from drafe collections
+                state = db.drafts.find_one({"username": username, "sessionId": user["latestSessionId"]})
+                if state is None:
+                    return jsonify({"status": "success", "message": "Login successfully", "preload": False, "editorState": "", "flowSlice": "", "editorSlice": "", "taskProblem": "", "taskDescription": ""})
+                return jsonify({"status": "success", "message": "Login successfully", "preload": True, "editorState": state["editorState"], "flowSlice": state["flowSlice"], "editorSlice": state["editorSlice"], "taskProblem": "", "taskDescription": ""})
             # return existing user
             return jsonify({"status": "success", "message": "Login successfully", "preload": False, "editorState": "", "flowSlice": "", "editorSlice": "", "taskProblem": "", "taskDescription": ""})
         #db.users.insert_one({"username": username, "password": password, "condition": condition, "latestSessionId": -1, "condTopicMapping": {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5}})

@@ -14,11 +14,23 @@ import {
   $isRangeSelection,
   $isElementNode,
   $hasAncestor,
+  ParagraphNode,
+  TextNode,
+  RootNode,
+  LineBreakNode,
 } from "lexical";
 import { SHOW_LOADING_COMMAND } from "./commands/SelfDefinedCommands";
-import { $createHighlightDepNode } from "./nodes/HighlightDepNode";
+import {
+  $createHighlightDepNode,
+  $isHighlightDepNode,
+  HighlightDepNode,
+} from "./nodes/HighlightDepNode";
 import { useDispatch } from "react-redux";
-import { $createTextBlockNode, $isTextBlockNode } from "./nodes/TextBlockNode";
+import {
+  $createTextBlockNode,
+  $isTextBlockNode,
+  TextBlockNode,
+} from "./nodes/TextBlockNode";
 import { cyan, teal, pink, amber, blue, purple } from "@mui/material/colors";
 
 function randomizeBGColor() {
@@ -69,27 +81,30 @@ export function $maybeMoveChildrenSelectionToParent(parentNode, offset = 0) {
   if (offset !== 0) {
   }
   const selection = $getSelection(); // selection is the last selection
-  console.log("[maybeMoveChildren] nodeToRemove is ", parentNode);
-  console.log("[maybeMoveChildren] selection is ", selection);
-  console.log(
-    "[maybeMoveChildren] selection's anchor's node is ",
-    selection.anchor.getNode()
-  );
-  console.log(
-    "[maybeMoveChildren] selection's focus's node is ",
-    selection.focus.getNode()
-  );
-  console.log(
-    "[maybeMoveChildren] selection's anchor's node's offset is ",
-    selection.anchor.offset
-  ); // this will be 0
-  console.log(
-    "[maybeMoveChildren] selection's focus's node's offset is ",
-    selection.focus.offset
-  ); // this will be 0
-  // An element node is a node that can contain other nodes
-  // if the node is element node, the node is the "parent"
-  // this if statement checks if the node is a range or parent. If not range, or it is a leaf, then do not need to update anything
+  if (selection) {
+    console.log("[maybeMoveChildren] nodeToRemove is ", parentNode);
+    console.log("[maybeMoveChildren] selection is ", selection);
+    console.log(
+      "[maybeMoveChildren] selection's anchor's node is ",
+      selection.anchor.getNode()
+    );
+    console.log(
+      "[maybeMoveChildren] selection's focus's node is ",
+      selection.focus.getNode()
+    );
+    console.log(
+      "[maybeMoveChildren] selection's anchor's node's offset is ",
+      selection.anchor.offset
+    ); // this will be 0
+    console.log(
+      "[maybeMoveChildren] selection's focus's node's offset is ",
+      selection.focus.offset
+    ); // this will be 0
+    // An element node is a node that can contain other nodes
+    // if the node is element node, the node is the "parent"
+    // this if statement checks if the node is a range or parent. If not range, or it is a leaf, then do not need to update anything
+  }
+
   if (!$isRangeSelection(selection) || !$isElementNode(parentNode)) {
     console.log(
       "[maybeMoveChildren] the selection is range selection: ",
@@ -977,6 +992,24 @@ export function removeChildrenNodeFromDepGraph(
   });
 }
 
+export function filterNodesByClassName(editor, nodes, attribute) {
+  // Filter nodes that are element nodes and have a corresponding DOM element
+  const paragraphNodes = nodes.filter((node) => {
+    if ($isElementNode(node) && node.getType() === "paragraph") {
+      const domElement = editor.getElementByKey(node.getKey());
+      console.log(
+        "domElement ",
+        domElement,
+        domElement.hasAttribute(attribute)
+      );
+      return domElement && domElement.hasAttribute(attribute);
+    }
+    return false;
+  });
+
+  return paragraphNodes;
+}
+
 export function DFSGetText(node) {
   if ($isTextNode(node)) return [node.getTextContent()];
 
@@ -1008,23 +1041,136 @@ export function addThesisToEditor(
     console.log("[utils] cannot find the thesis root key");
 
   // find the parent container (the paragraph node)
-  let parentContainer = firstKeyPointNode
+  let parentContainer = firstKeyPointNode;
   while (!$isParagraphNode(parentContainer)) {
-    parentContainer = parentContainer.getParent()
+    parentContainer = parentContainer.getParent();
   }
 
   // first create the thesis node
-  const textBlockNode = $createTextBlockNode()
+  const textBlockNode = $createTextBlockNode();
   const hlThesisNode = $createHighlightDepNode("highlight-dep-elb", thesisText);
   hlThesisNode.setStyle(`background-color: ${colorMapping["root"]}`);
   textBlockNode.append(hlThesisNode);
   textBlockNode.append($createTextNode("  "));
   // add the mapping between flow node and editor node
-  nodeMappings[thesisFlowNodeKey] = hlThesisNode.getKey()
+  nodeMappings[thesisFlowNodeKey] = hlThesisNode.getKey();
 
   // then insert it to the beginning of the parent container
-  const originalBeginningNode = parentContainer.getFirstChild()
-  originalBeginningNode.insertBefore(textBlockNode)
+  const originalBeginningNode = parentContainer.getFirstChild();
+  originalBeginningNode.insertBefore(textBlockNode);
 
-  return nodeMappings
+  return nodeMappings;
+}
+
+// the editor node key is not consistent every time after parsing,
+// so the following two functions are used to serialize and deserialize the states
+// NOT Working...
+export function getEditorStateWithKeys(editorState) {
+  const jsonState = editorState.toJSON();
+  const nodeMap = editorState._nodeMap;
+  const serializedState = { ...jsonState, nodeKeyMap: {} };
+
+  nodeMap.forEach((node, key) => {
+    serializedState.nodeKeyMap[key] = node.exportJSON();
+  });
+  console.log(
+    "[util get editor state with keys] nodeKeyMap ",
+    serializedState.nodeKeyMap
+  );
+
+  return serializedState;
+}
+
+export function parseEditorStateWithKeys(editor, serializedState) {
+  const { nodeKeyMap, ...jsonState } = serializedState;
+
+  const editorState = editor.parseEditorState(jsonState);
+
+  console.log(
+    "[until parse editor state with keys] editor state's map ",
+    editorState._nodeMap
+  );
+
+  console.log("_nodeMap is map ", editorState._nodeMap instanceof Map); // Should log true
+
+  const newNodeMap = new Map();
+  Object.entries(nodeKeyMap).forEach(([key, nodeJson]) => {
+    console.log(
+      "[util] parseEditorStateWithKeys: key nodeJson: ",
+      key,
+      nodeJson
+    );
+    let node = null;
+    switch (nodeJson.type) {
+      case "paragraph":
+        node = ParagraphNode.importJSON(nodeJson);
+        break;
+      case "text":
+        node = TextNode.importJSON(nodeJson);
+        break;
+      case "root":
+        node = RootNode.importJSON(nodeJson);
+        break;
+      case "hl-text":
+        node = HighlightDepNode.importJSON(nodeJson);
+        break;
+      case "textBlock":
+        node = TextBlockNode.importJSON(nodeJson);
+        break;
+      case "linebreak":
+        node = LineBreakNode.importJSON(nodeJson);
+        break;
+      default:
+        console.log("unknown node type:", nodeJson.type);
+        break;
+    }
+    newNodeMap.set(key, node);
+  });
+  console.log(
+    "[until parse editor state with keys] new node map is ",
+    newNodeMap
+  );
+
+  editorState._nodeMap = newNodeMap;
+
+  return editorState;
+}
+
+export function assignNewEditorNodeKeyToMapping(
+  editorStateNodeMap,
+  dependencyGraph,
+  flowEditorNodeMapping
+) {
+  flowEditorNodeMapping = JSON.parse(JSON.stringify(flowEditorNodeMapping))
+  console.log("[assign new key to mapping] dependency graph is ", dependencyGraph)
+
+  for (const [newEditorKey, editorNode] of editorStateNodeMap) {
+    if ($isHighlightDepNode(editorNode)) {
+      console.log(
+        "[assign new key to mapping]highlight node key is ",
+        newEditorKey
+      );
+      let flowKey = null;
+      for (const [key, value] of Object.entries(dependencyGraph)) {
+        if (value.text === editorNode.__text) {
+          flowKey = key;
+          break;
+        }
+      }
+
+      if (flowKey === null) {
+        console.log("cannot find the flow key that has the same text content");
+      }
+
+      if (flowKey in flowEditorNodeMapping) {
+        flowEditorNodeMapping[flowKey] = newEditorKey;
+      } else {
+        console.log("cannot find the flow node key in the node mapping");
+      }
+    }
+  }
+
+  console.log("the new flow editor node mapping is ", flowEditorNodeMapping);
+
+  return flowEditorNodeMapping;
 }

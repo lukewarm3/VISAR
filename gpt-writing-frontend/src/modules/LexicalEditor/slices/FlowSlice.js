@@ -12,6 +12,8 @@ import { cyan, teal, pink, amber, blue, purple } from "@mui/material/colors";
 import { addGenerationsFromSketch } from "../utils";
 import { GEN_TEXT_FROM_SKETCH_COMMAND } from "../commands/SelfDefinedCommands";
 import structuredClone from "@ungap/structured-clone";
+import { $isHighlightDepNode } from "../nodes/HighlightDepNode";
+import { $getNodeByKey } from "lexical";
 
 const initialState = {
   nodes: [],
@@ -241,6 +243,40 @@ const flowSlice = createSlice({
         dependencyGraph: dependencyGraph,
       };
     },
+    setFlowSliceStates(state, action) {
+      const {
+        nodes,
+        edges,
+        selectedPrompts,
+        flowEditorNodeMapping,
+        nodeData,
+        dataFetched,
+        backendResponse,
+        edgeData,
+        dependentsOfModifiedNodes,
+        curModifiedFlowNodeKey,
+        isLazyUpdate,
+        finalKeywords,
+        dependencyGraph,
+      } = action.payload;
+
+      return {
+        ...state,
+        nodes: nodes,
+        edges: edges,
+        selectedPrompts: selectedPrompts,
+        flowEditorNodeMapping: flowEditorNodeMapping,
+        nodeData: nodeData,
+        dataFetched: dataFetched,
+        backendResponse: backendResponse,
+        edgeData: edgeData,
+        dependentsOfModifiedNodes: dependentsOfModifiedNodes,
+        curModifiedFlowNodeKey: curModifiedFlowNodeKey,
+        isLazyUpdate: isLazyUpdate,
+        finalKeywords: finalKeywords,
+        dependencyGraph: dependencyGraph,
+      };
+    },
     setSelectedPrompts(state, action) {
       const prompts = action.payload;
       return {
@@ -358,6 +394,7 @@ const flowSlice = createSlice({
         newFlowEditorNodeMapping
       );
 
+      console.log("[setFlowEditorNodeMapping] new mapping:", newMappings)
       return {
         ...state,
         flowEditorNodeMapping: { ...newMappings },
@@ -405,6 +442,7 @@ const flowSlice = createSlice({
     },
     setNodeSelected: (state, action) => {
       const nodeKey = action.payload;
+      console.log("[flow slice] editor node key is", nodeKey);
 
       const nodeData = JSON.parse(JSON.stringify(state.nodeData));
 
@@ -961,6 +999,7 @@ const flowSlice = createSlice({
           dependencyGraph[keyword_key] = {
             type: "featuredBy",
             prompt: editorNodeText,
+            text: editorNodeText,
             isImplemented: true,
             parent: root_key,
             children: [],
@@ -1004,7 +1043,9 @@ const flowSlice = createSlice({
         flowEditorNodeMapping: { ...flowEditorNodeMapping },
       };
     },
+    
   },
+
   extraReducers: {
     [generateFromSketch.pending]: (state, action) => {
       state.dataFetched = false;
@@ -1045,6 +1086,7 @@ export const {
   onConnect,
   loadNodes,
   loadNodesBottomUp,
+  setFlowSliceStates,
   setSelectedPrompts,
   addNode,
   setNodeData,

@@ -89,18 +89,18 @@ export function ArgumentativeMenu ({ editor }) {
     }
 
     const rootElement = editor.getRootElement()
+    const domRange = nativeSelection.rangeCount > 0 ? nativeSelection.getRangeAt(0) : null
 
     const condition =
       selection != null &&
       rootElement != null &&
       rootElement.contains(nativeSelection.anchorNode) &&
-      isMenuOpen
+      isMenuOpen && domRange
 
     // console.log('[condition] isMenuOpen is ', isMenuOpen)
     // console.log('Whole condition is ', condition)
 
     if (condition) {
-      const domRange = nativeSelection.getRangeAt(0)
       let rect
       if (nativeSelection.anchorNode === rootElement) {
         let inner = rootElement

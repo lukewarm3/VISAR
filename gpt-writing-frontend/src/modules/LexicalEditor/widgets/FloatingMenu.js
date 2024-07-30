@@ -88,10 +88,22 @@ export function FloatingMenu({ editor }) {
     const selection = $getSelection();
     const buttonElem = buttonRef.current;
     const nativeSelection = window.getSelection();
-    const domRange = nativeSelection.getRangeAt(0);
+    const domRange =
+      nativeSelection.rangeCount > 0 ? nativeSelection.getRangeAt(0) : null;
     // for (const [key, value] of Object.entries(nodeData)){
     //   console.log("[float menu]nodeData is ", key, value)
     // }
+    let nodes = null
+    if (selection) {
+      nodes = selection.getNodes();
+    } else {
+      return
+    }
+    
+
+    const paragraphNodes = nodes.filter(
+      (node) => node.getType() === "paragraph"
+    );
 
     if (buttonElem === null) {
       return;
@@ -103,7 +115,8 @@ export function FloatingMenu({ editor }) {
       !nativeSelection.isCollapsed &&
       rootElement != null &&
       rootElement.contains(nativeSelection.anchorNode) &&
-      domRange.getClientRects().length <= 1
+      domRange &&
+      paragraphNodes.length <= 1
     ) {
       let rect;
       if (nativeSelection.anchorNode === rootElement) {
@@ -225,11 +238,22 @@ export function FloatingMenu({ editor }) {
         const SelectedEditorNodeKey = nodeMappings[key];
         const editorNode = $getNodeByKey(SelectedEditorNodeKey);
         const depData = dependencyGraph[key];
-        if (editorNode == null) {
+        const flowNode = nodeData[key];
+        console.log("[flow menu] nodeMapping is ", nodeMappings)
+        if (
+          editorNode == null ||
+          SelectedEditorNodeKey == null ||
+          depData == null ||
+          flowNode == null
+        ) {
+          console.log("[flow menu] editor node is", editorNode)
           continue;
         }
-        const flowNode = nodeData[key];
+
         console.log("curNode['type']: ", depData["type"]);
+        console.log("[flow menu] editor node is ", editorNode)
+        console.log("[flow menu] depData is ", depData)
+        console.log("[flow menu] flow node is ", flowNode)
         if (flowNode.selected === true) {
           // set bottom border of the node to incidate it is selected
           if (
@@ -267,7 +291,7 @@ export function FloatingMenu({ editor }) {
             }
           } else {
             console.log(`editorNode ${SelectedEditorNodeKey} is not a hl node`);
-            editorNode.setStyle("border: dashed green;");
+            //editorNode.setStyle("border: dashed green;");
           }
         } else {
           // remove bottom border
@@ -300,12 +324,12 @@ export function FloatingMenu({ editor }) {
             }
           } else {
             console.log(`editorNode ${SelectedEditorNodeKey} is not a hl node`);
-            editorNode.setStyle("background-color: white;");
+            //editorNode.setStyle("background-color: white;");
           }
         }
       }
     });
-  }, [nodeData]);
+  }, [nodeData, nodeMappings]);
 
   useEffect(() => {
     // editor.getEditorState().read(() => {
